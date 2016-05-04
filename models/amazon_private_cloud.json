@@ -1,0 +1,71 @@
+{
+    "compute": {
+        "server_params": [
+            { "sockets": 1, "max_cores_per_socket": 8, "max_memory": 256,
+              "base_memory": 128, "base_cost": 2116,
+              "per_core": 124.5, "per_GB": 5.5, "rack_space": 1, "power": 0.3 },
+            { "sockets": 2, "max_cores_per_socket": 8, "max_memory": 256,
+              "base_memory": 128, "base_cost": 5056,
+              "per_core": 192, "per_GB": 5.5, "rack_space": 2, "power": 0.55 },
+            { "sockets": 4, "max_cores_per_socket": 8, "max_memory": 256,
+              "base_memory": 128, "base_cost": 10887,
+              "per_core": 224.625, "per_GB": 5.5, "rack_space": 4, "power": 0.75 }
+        ],
+        "server_discount_percentage": 25,
+        "server_deployment_cost": 250,
+        "server_annual_maintenance_cost_percentage": 15,
+        "spare_server_addition_annual_percentage": 5,
+        "rack_capacity": 42,
+        "rack_server_capacity_limit": 28,
+        "rack_power_limit": 10,
+        "rack_purchase_cost": 3500,
+        "rack_operational_cost_info": {
+            "colocation": {
+                "monthly_charge_per_rack": 2500,
+                "monthly_space_rent": 1490,
+                "monthly_power_rent": 1095
+            },
+            "on_premise": {
+                "monthly_charge_per_rack": 1500,
+                "monthly_space_rent": 46.67,
+                "monthly_power_rent": 1277.78
+            }
+        },
+        "pdu_cost": 540,
+        "num_pdus_per_rack": 2,
+        "top_of_rack_switch_cost": 5000,
+        "top_of_rack_switch_space": 1,
+        "num_top_of_rack_switches_per_rack": 2
+    },
+    "storage": {
+        "os_penalty_percentage": 7,
+        "raid_penalty_percentage": 50,
+        "cost_per_TB": 6144,
+        "discount_percentage": 50,
+        "backup_percentage": 100,
+        "backup_speed_per_device_in_MBps": 140,
+        "backup_time_window_in_hours": 8,
+        "backup_device_cost": 1800,
+        "rack_storage_capacity": 1500,
+        "rack_monthly_operational_cost": 1500
+    },
+    "network": {
+        "purchase_percentage_of_compute": 20,
+        "annual_maintenance_overhead_percentage_of_purchase": 15,
+        "colocation": {
+            "bandwidth_cost_tiers": [
+                { "limit": 5, "price_per_Mbps": 30, "monthly_recurring_cost": 150 },
+                { "limit": 10, "price_per_Mbps": 25, "monthly_recurring_cost": 200 },
+                { "limit": 30, "price_per_Mbps": 20, "monthly_recurring_cost": 250 },
+                { "limit": 50, "price_per_Mbps": 15, "monthly_recurring_cost": 300 },
+                { "limit": 100, "price_per_Mbps": 10, "monthly_recurring_cost": 500 },
+                { "limit": 1000000000000, "price_per_Mbps": 7, "monthly_recurring_cost": 700 }
+            ]
+        },
+        "on_premise": {
+            "price_per_Mbps": 10
+        }
+    },
+    "cost_per_kWh": 0.12,
+    "operating_period_in_years": 3
+}
