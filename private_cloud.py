@@ -66,8 +66,7 @@ class ArgumentsHandler:
         self.m_model = json.load(fptr);
         fptr.close();
 
-def determine_num_usable_cores_in_server_type(model, memory_per_core, idx):
-    server_info = model['compute']['server_params'][idx];
+def determine_num_usable_cores_in_server_type(server_info, memory_per_core):
     max_cores_in_server = server_info['sockets']*server_info['max_cores_per_socket']
     max_usable_cores = int(float(server_info['max_memory'])/memory_per_core);
     num_usable_cores = min(max_usable_cores, max_cores_in_server);
@@ -75,13 +74,12 @@ def determine_num_usable_cores_in_server_type(model, memory_per_core, idx):
     num_usable_cores = num_cores_per_socket*server_info['sockets'];
     return num_usable_cores;
         
-def determine_server_purchase_cost(model, memory_per_core, idx, num_usable_cores=None):
+def determine_server_purchase_cost(model, server_info, memory_per_core, num_usable_cores=None):
     if(not num_usable_cores):
-        num_usable_cores = determine_num_usable_cores_in_server_type(model, memory_per_core, idx);
+        num_usable_cores = determine_num_usable_cores_in_server_type(server_info, memory_per_core);
     if(num_usable_cores < 1):
         raise NoServerConfigurationFound(('No valid server configuration found for specified memory per core value : %d')%(memory_per_core))
     memory_needed = num_usable_cores*memory_per_core;
-    server_info = model['compute']['server_params'][idx];
     server_cost_with_baseline_memory = server_info['per_core']*num_usable_cores + server_info['base_cost'];
     server_cost = server_info['per_GB']*memory_needed + (server_cost_with_baseline_memory - server_info['per_GB']*server_info['base_memory']);
     #discount
@@ -128,42 +126,48 @@ def determine_pdu_cost(model, num_racks):
 def determine_top_of_rack_switch_cost(model, num_racks):
     return model['compute']['top_of_rack_switch_cost']*model['compute']['num_top_of_rack_switches_per_rack']*num_racks;
 
+def determine_total_cost_for_server(model, server_info, num_cores, memory_per_core, private_cloud_hosting, operating_period_in_years):
+    num_usable_cores_per_server = determine_num_usable_cores_in_server_type(server_info, memory_per_core);
+    if(num_usable_cores_per_server < 1):
+        return None;
+    cost_dict = OrderedDict() 
+    cost_dict['num_usable_cores_per_server'] = num_usable_cores_per_server;
+    cost_dict['memory_per_server'] = num_usable_cores_per_server*memory_per_core;
+    cost_dict['num_sockets_per_server'] = server_info['sockets'];
+    cost_dict['rack_space_per_server'] = server_info['rack_space'];
+    cost_dict['num_servers'] = determine_num_servers(num_cores, num_usable_cores_per_server);
+    cost_dict['server_unit_purchase_cost'] = determine_server_purchase_cost(model, server_info, memory_per_core, num_usable_cores_per_server);
+    cost_dict['server_unit_power'] = server_info['power'];
+    cost_dict['server_purchase_cost'] = cost_dict['num_servers']*cost_dict['server_unit_purchase_cost'];
+    cost_dict['server_deployment_cost'] = cost_dict['num_servers']*determine_server_deployment_cost(model);
+    cost_dict['server_maintenance_cost'] = determine_server_maintenance_cost(model, cost_dict['server_purchase_cost'], operating_period_in_years);
+    cost_dict['spare_server_addition_cost'] = determine_spare_server_cost(model,
+            cost_dict['server_purchase_cost']+cost_dict['server_maintenance_cost'], operating_period_in_years);
+    cost_dict['max_num_servers_per_rack'] = determine_max_num_servers_per_rack(model, server_info['rack_space'], server_info['power']);
+    cost_dict['num_racks'] = determine_num_racks(model, cost_dict['num_servers'], cost_dict['max_num_servers_per_rack']);
+    cost_dict['rack_purchase_cost'] = determine_rack_purchase_cost(model, cost_dict['num_racks']);
+    cost_dict['rack_operational_cost'] = determine_rack_operational_cost(model, cost_dict['num_racks'], private_cloud_hosting,
+            operating_period_in_years);
+    cost_dict['pdu_cost'] = determine_pdu_cost(model, cost_dict['num_racks']);
+    cost_dict['top_of_rack_switch_cost'] = determine_top_of_rack_switch_cost(model, cost_dict['num_racks']);
+    cost_dict['summary'] = OrderedDict();
+    cost_dict['summary']['hardware_cost'] = cost_dict['server_purchase_cost']+cost_dict['server_deployment_cost'] \
+            +cost_dict['server_maintenance_cost']+cost_dict['spare_server_addition_cost'] \
+            +cost_dict['rack_purchase_cost']+cost_dict['pdu_cost']+cost_dict['top_of_rack_switch_cost'];
+    cost_dict['summary']['operational_cost'] = cost_dict['rack_operational_cost'];
+    cost_dict['summary']['total_cost'] = cost_dict['summary']['hardware_cost']+cost_dict['summary']['operational_cost'];
+    cost_dict['summary']['total_power'] = cost_dict['server_unit_power']*cost_dict['num_servers']
+    return cost_dict;
+
 def select_optimal_server_configuration(model, num_cores, memory_per_core, private_cloud_hosting, operating_period_in_years):
     min_cost = 10000000000000
     min_cost_idx = -1;
     min_cost_dict = None;
     for idx in range(len(model['compute']['server_params'])):
         server_info = model['compute']['server_params'][idx];
-        cost_dict = OrderedDict() 
-        num_usable_cores_per_server = determine_num_usable_cores_in_server_type(model, memory_per_core, idx);
-        if(num_usable_cores_per_server < 1):
+        cost_dict = determine_total_cost_for_server(model, server_info, num_cores, memory_per_core, private_cloud_hosting, operating_period_in_years);
+        if(not cost_dict):
             continue;
-        cost_dict['num_usable_cores_per_server'] = num_usable_cores_per_server;
-        cost_dict['memory_per_server'] = num_usable_cores_per_server*memory_per_core;
-        cost_dict['num_sockets_per_server'] = server_info['sockets'];
-        cost_dict['rack_space_per_server'] = server_info['rack_space'];
-        cost_dict['num_servers'] = determine_num_servers(num_cores, num_usable_cores_per_server);
-        cost_dict['server_unit_purchase_cost'] = determine_server_purchase_cost(model, memory_per_core, idx, num_usable_cores_per_server);
-        cost_dict['server_unit_power'] = server_info['power'];
-        cost_dict['server_purchase_cost'] = cost_dict['num_servers']*cost_dict['server_unit_purchase_cost'];
-        cost_dict['server_deployment_cost'] = cost_dict['num_servers']*determine_server_deployment_cost(model);
-        cost_dict['server_maintenance_cost'] = determine_server_maintenance_cost(model, cost_dict['server_purchase_cost'], operating_period_in_years);
-        cost_dict['spare_server_addition_cost'] = determine_spare_server_cost(model,
-                cost_dict['server_purchase_cost']+cost_dict['server_maintenance_cost'], operating_period_in_years);
-        cost_dict['max_num_servers_per_rack'] = determine_max_num_servers_per_rack(model, server_info['rack_space'], server_info['power']);
-        cost_dict['num_racks'] = determine_num_racks(model, cost_dict['num_servers'], cost_dict['max_num_servers_per_rack']);
-        cost_dict['rack_purchase_cost'] = determine_rack_purchase_cost(model, cost_dict['num_racks']);
-        cost_dict['rack_operational_cost'] = determine_rack_operational_cost(model, cost_dict['num_racks'], private_cloud_hosting,
-                operating_period_in_years);
-        cost_dict['pdu_cost'] = determine_pdu_cost(model, cost_dict['num_racks']);
-        cost_dict['top_of_rack_switch_cost'] = determine_top_of_rack_switch_cost(model, cost_dict['num_racks']);
-        cost_dict['summary'] = OrderedDict();
-        cost_dict['summary']['hardware_cost'] = cost_dict['server_purchase_cost']+cost_dict['server_deployment_cost'] \
-                +cost_dict['server_maintenance_cost']+cost_dict['spare_server_addition_cost'] \
-                +cost_dict['rack_purchase_cost']+cost_dict['pdu_cost']+cost_dict['top_of_rack_switch_cost'];
-        cost_dict['summary']['operational_cost'] = cost_dict['rack_operational_cost'];
-        cost_dict['summary']['total_cost'] = cost_dict['summary']['hardware_cost']+cost_dict['summary']['operational_cost'];
-        cost_dict['summary']['total_power'] = cost_dict['server_unit_power']*cost_dict['num_servers']
         if(cost_dict['summary']['total_cost'] < min_cost):
             min_cost_idx = idx;
             min_cost = cost_dict['summary']['total_cost']
