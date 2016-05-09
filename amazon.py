@@ -197,7 +197,7 @@ def compute_storage_cost(model, raw_storage_size, storage_utilization_percentage
     if(not min_cost_dict):
         raise NoServerConfigurationFound('Could not find storage type with required specification');
     backup_onetime_cost = usable_storage*model['storage']['snapshot_cost_per_TB'];
-    backup_monthly_cost = (12*operating_period_in_years*float(usable_storage*backup_percentage_per_month)/100)*model['storage']['snapshot_cost_per_TB_per_month'];
+    backup_monthly_cost = (12*operating_period_in_years*float(usable_storage*backup_percentage_per_month)/100)*model['storage']['snapshot_cost_per_TB'];
     min_cost_dict['backup_onetime_cost'] = backup_onetime_cost;
     min_cost_dict['backup_monthly_cost'] = backup_monthly_cost;
     min_cost_dict['summary'] = OrderedDict();
