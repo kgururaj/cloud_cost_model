@@ -41,7 +41,6 @@ class AmazonArgumentsHandler(ArgumentsHandler):
         for product_key,product_info in self.m_ec2_pricing_model['products'].iteritems():
             if('productFamily' in product_info):
                 product_types.add(product_info['productFamily']);
-        print(product_types);
 
 def create_instance_to_products_list(model, ec2_pricing_model):
     instances_set = set(model['instances']);

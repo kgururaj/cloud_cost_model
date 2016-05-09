@@ -3,8 +3,7 @@
         "core_to_vcpu_factor": 2,
         "location": "US West (Oregon)",
         "operating_system": "Linux",
-        "instances" : [ "c4.8xlarge" ],
-        "instances_blah": [
+        "instances": [
             "c4.large",
             "c4.xlarge",
             "c4.2xlarge",
