@@ -18,7 +18,6 @@ class ArgumentsHandler:
     m_core_utilization = 100;
     m_memory_per_core = None;
     m_storage = None;
-    m_storage_type = 'NAS';
     m_storage_utilization = 100;
     m_backup_percentage_per_month = 5;
     m_iops_per_GB_requested = None;
@@ -28,17 +27,15 @@ class ArgumentsHandler:
     m_include_IT_cost = False;
 
     def add_optional_arguments(self, parser):
-        parser.add_argument('--private_cloud_hosting', '-p', help='Type of private cloud hosting - valid options are: colocation, on_premise',
-                default='colocation', choices=['colocation', 'on_premise']);
-        parser.add_argument('--core_utilization', help='Average utilization per core (as a percentage)', default=100, type=float);
-        parser.add_argument('--operating_period', help='Operating period in years', default=3, type=int);
-        parser.add_argument('--storage_type', help='Storage type - NAS(default) or SAN', default='NAS', choices=['SAN','NAS']);
-        parser.add_argument('--backup_percentage_per_month', help='Percentage of total data that changes per month', default=5, type=float);
+        parser.add_argument('--core_utilization', help='Average utilization per core (as a percentage) - default: 100%%', default=100, type=float);
+        parser.add_argument('--operating_period', help='Operating period in years - default: 3 years', default=3, type=int);
+        parser.add_argument('--backup_percentage_per_month', help='Percentage of total data that changes per month - default: 5%%',
+                default=5, type=float);
         parser.add_argument('--include_IT_cost', help='Include IT cost (default: False)', action='store_true');
 
     def add_required_arguments(self, parser):
         required_named_args_group = parser.add_argument_group('Required named arguments');
-        required_named_args_group.add_argument('--model_parameters_file', '-m', help='Path to private cloud model parameters file', required=True);
+        required_named_args_group.add_argument('--model_parameters_file', '-m', help='Path to cloud model parameters file', required=True);
         required_named_args_group.add_argument('--num_cores', '-c', help='Number of cores', required=True, type=int);
         required_named_args_group.add_argument('--memory_per_core', help='Memory/RAM (in GB) per core', required=True, type=int);
         required_named_args_group.add_argument('--storage', '-s', help='Storage size (in TB)', required=True, type=int);
@@ -46,8 +43,7 @@ class ArgumentsHandler:
         required_named_args_group.add_argument('--bandwidth_utilization', help='Percentage of external bandwidth used', required=True, type=float);
 
     def __init__(self, argparse_obj=None, model_parameters_file=None, num_cores=None, core_utilization=None,
-            memory_per_core=None, storage=None, storage_type=None,
-            bandwidth=None, bandwidth_utilization=None, private_cloud_hosting=None, operating_period_in_years=None):
+            memory_per_core=None, storage=None, bandwidth=None, bandwidth_utilization=None, operating_period_in_years=None):
         if(argparse_obj):
             self.add_required_arguments(argparse_obj);
             self.add_optional_arguments(argparse_obj);
@@ -59,9 +55,7 @@ class ArgumentsHandler:
             self.m_storage = arguments.storage;
             self.m_bandwidth = arguments.bandwidth;
             self.m_bandwidth_utilization = arguments.bandwidth_utilization;
-            self.m_private_cloud_hosting = arguments.private_cloud_hosting;
             self.m_operating_period_in_years = arguments.operating_period;
-            self.m_storage_type = arguments.storage_type;
             self.m_backup_percentage_per_month = arguments.backup_percentage_per_month;
             self.m_include_IT_cost = arguments.include_IT_cost;
         else:
@@ -72,9 +66,7 @@ class ArgumentsHandler:
             self.m_storage = storage;
             self.m_bandwidth = bandwidth;
             self.m_bandwidth_utilization = bandwidth_utilization;
-            self.m_private_cloud_hosting = private_cloud_hosting;
             self.m_operating_period_in_years = operating_period_in_years;
-            self.m_storage_type = storage_type;
 
     def parse_model_params_file(self, filename):
             fptr = open(filename, 'rb');

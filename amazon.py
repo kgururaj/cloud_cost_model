@@ -23,13 +23,13 @@ class AmazonArgumentsHandler(ArgumentsHandler):
         parser.add_argument('--include_aws_support', choices=['business', 'enterprise'], default=None);
 
     def __init__(self, argparse_obj=None, model_parameters_file=None, ec2_pricing_json_file=None, num_cores=None, memory_per_core=None, storage=None,
-            bandwidth=None, bandwidth_utilization=None, private_cloud_hosting=None, operating_period_in_years=None):
+            bandwidth=None, bandwidth_utilization=None, operating_period_in_years=None):
         
         if(argparse_obj):
             self.add_amazon_required_arguments(argparse_obj);
             self.add_amazon_optional_arguments(argparse_obj);
         ArgumentsHandler.__init__(self, argparse_obj, model_parameters_file, num_cores, memory_per_core, storage,
-                bandwidth, bandwidth_utilization, private_cloud_hosting, operating_period_in_years);
+                bandwidth, bandwidth_utilization, operating_period_in_years);
         if(argparse_obj):
             arguments = argparse_obj.parse_args();
             ec2_pricing_json_file = arguments.ec2_pricing_json_file;
