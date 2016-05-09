@@ -122,6 +122,7 @@ def select_optimal_server_configuration(model, num_cores, memory_per_core, priva
 def compute_storage_cost(model, raw_storage_size, private_cloud_hosting, operating_period_in_years,
         storage_type, fix_amazon_calculations):
     cost_dict = OrderedDict()
+    cost_dict['raw_storage_size'] = raw_storage_size;
     cost_dict['usable_storage'] = determine_usable_storage(model, raw_storage_size);
     storage_params = model['storage'];
     cost_per_TB = (float(100-storage_params['discount_percentage'])/100)*storage_params['cost_per_TB'][storage_type];
@@ -166,6 +167,17 @@ def compute_network_cost(model, bandwidth, bandwidth_utilization, private_cloud_
     cost_dict['summary']['total_cost'] = cost_dict['summary']['hardware_cost'] + cost_dict['summary']['bandwidth_cost'];
     return cost_dict;
 
+def compute_IT_cost(model, cost_dict, operating_period_in_years):
+    IT_params = model['IT'];
+    IT_cost_dict = OrderedDict();
+    IT_cost_dict['num_compute_admins'] = int(math.ceil(float(cost_dict['compute']['num_servers'])/IT_params['num_servers_per_admin']));
+    IT_cost_dict['num_storage_admins'] = int(math.ceil(float(cost_dict['storage']['raw_storage_size'])/IT_params['storage_per_admin']));
+    IT_cost_dict['num_network_admins'] = float(IT_params['network_admin_percentage']*IT_cost_dict['num_compute_admins'])/100;
+    IT_cost_dict['summary'] = OrderedDict();
+    IT_cost_dict['summary']['total_cost'] = (IT_cost_dict['num_compute_admins']+IT_cost_dict['num_storage_admins'] \
+            +IT_cost_dict['num_network_admins'])*IT_params['admin_annual_salary']*operating_period_in_years;
+    return IT_cost_dict;
+
 def compute_tco(args_handler, do_print=False):
     model = args_handler.m_model;
     cost_dict = OrderedDict();
@@ -175,12 +187,17 @@ def compute_tco(args_handler, do_print=False):
             args_handler.m_operating_period_in_years, args_handler.m_storage_type, False);
     cost_dict['network'] = compute_network_cost(model, args_handler.m_bandwidth, args_handler.m_bandwidth_utilization,
             args_handler.m_private_cloud_hosting, args_handler.m_operating_period_in_years, cost_dict['compute']['summary']['hardware_cost']);
+    cost_dict['IT'] = None;
     total_cost = cost_dict['compute']['summary']['total_cost']+cost_dict['storage']['summary']['total_cost'] \
             + cost_dict['network']['summary']['total_cost'];
+    if(args_handler.m_include_IT_cost):
+        cost_dict['IT'] = compute_IT_cost(model, cost_dict, args_handler.m_operating_period_in_years);
+        total_cost += cost_dict['IT']['summary']['total_cost'];
     cost_dict['summary'] = OrderedDict([
         ('compute', cost_dict['compute']['summary']['total_cost']),
         ('storage', cost_dict['storage']['summary']['total_cost']),
         ('network', cost_dict['network']['summary']['total_cost']),
+        ('IT', cost_dict['IT']['summary']['total_cost'] if args_handler.m_include_IT_cost else None),
         ('total_cost', total_cost),
         ]);
     if(do_print):

@@ -24,7 +24,7 @@ class ArgumentsHandler:
     m_storage_bandwidth_per_TB_requested = None;
     m_bandwidth = None;
     m_bandwidth_utilization = None;
-
+    m_include_IT_cost = False;
 
     def add_optional_arguments(self, parser):
         parser.add_argument('--private_cloud_hosting', '-p', help='Type of private cloud hosting - valid options are: colocation, on_premise',
@@ -32,6 +32,7 @@ class ArgumentsHandler:
         parser.add_argument('--core_utilization', help='Average utilization per core (as a percentage)', default=100, type=float);
         parser.add_argument('--operating_period', help='Operating period in years', default=3, type=int);
         parser.add_argument('--storage_type', help='Storage type - NAS(default) or SAN', default='NAS', choices=['SAN','NAS']);
+        parser.add_argument('--include_IT_cost', help='Include IT cost (default: False)', action='store_true');
 
     def add_required_arguments(self, parser):
         required_named_args_group = parser.add_argument_group('Required named arguments');
@@ -59,6 +60,7 @@ class ArgumentsHandler:
             self.m_private_cloud_hosting = arguments.private_cloud_hosting;
             self.m_operating_period_in_years = arguments.operating_period;
             self.m_storage_type = arguments.storage_type;
+            self.m_include_IT_cost = arguments.include_IT_cost;
         else:
             parse_model_params_file(model_parameters_file);
             self.m_num_cores = num_cores;
