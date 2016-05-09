@@ -4,67 +4,10 @@ import sys
 import json
 import argparse
 import math
-import pdb;
 from collections import OrderedDict
-
-class NoServerConfigurationFound(Exception):
-
-    def __init__(self, value):
-        self.value = value;
-
-    def __str__(self):
-        return repr(self.value);
-
-class ArgumentsHandler:
-
-    m_model = None;
-    m_num_cores = None;
-    m_memory_per_core = None;
-    m_storage = None;
-    m_bandwidth = None;
-    m_bandwidth_utilization = None;
-
-    def add_optional_arguments(self, parser):
-        parser.add_argument('--private_cloud_hosting', '-p', help='Type of private cloud hosting - valid options are: colocation, on_premise',
-                default='colocation', choices=['colocation', 'on_premise']);
-        parser.add_argument('--core_utilization', help='Average utilization per core (as a percentage)', default=100, type=float);
-        parser.add_argument('--operating_period', help='Operating period in years', default=3, type=int);
-
-    def add_required_arguments(self, parser):
-        required_named_args_group = parser.add_argument_group('Required named arguments');
-        required_named_args_group.add_argument('--model_parameters_file', '-m', help='Path to private cloud model parameters file', required=True);
-        required_named_args_group.add_argument('--num_cores', '-c', help='Number of cores', required=True, type=int);
-        required_named_args_group.add_argument('--memory_per_core', help='Memory/RAM (in GB) per core', required=True, type=int);
-        required_named_args_group.add_argument('--storage', '-s', help='NAS storage size (in TB)', required=True, type=int);
-        required_named_args_group.add_argument('--bandwidth', '-b', help='External bandwidth (in Mbps)', required=True, type=int);
-        required_named_args_group.add_argument('--bandwidth_utilization', help='Percentage of external bandwidth used', required=True, type=float);
-
-    def __init__(self, argparse_obj=None, model_parameters_file=None, num_cores=None, memory_per_core=None, storage=None,
-            bandwidth=None, bandwidth_utilization=None, private_cloud_hosting=None, operating_period_in_years=None):
-        if(argparse_obj):
-            self.add_required_arguments(argparse_obj);
-            self.add_optional_arguments(argparse_obj);
-            arguments = argparse_obj.parse_args();
-            self.parse_model_params_file(arguments.model_parameters_file);
-            self.m_num_cores = arguments.num_cores;
-            self.m_memory_per_core = arguments.memory_per_core;
-            self.m_storage = arguments.storage;
-            self.m_bandwidth = arguments.bandwidth;
-            self.m_bandwidth_utilization = arguments.bandwidth_utilization;
-            self.m_private_cloud_hosting = arguments.private_cloud_hosting;
-            self.m_operating_period_in_years = arguments.operating_period;
-        else:
-            parse_model_params_file(model_parameters_file);
-            self.m_num_cores = num_cores;
-            self.m_memory_per_core = memory_per_core;
-            self.m_storage = storage;
-            self.m_bandwidth = bandwidth;
-            self.m_bandwidth_utilization = bandwidth_utilization;
-
-    def parse_model_params_file(self, filename):
-        fptr = open(filename, 'rb');
-        self.m_model = json.load(fptr);
-        fptr.close();
+from ccc_model_common import ArgumentsHandler
+from ccc_model_common import NoServerConfigurationFound
+from ccc_model_common import determine_usable_storage
 
 def determine_num_usable_cores_in_server_type(server_info, memory_per_core):
     max_cores_in_server = server_info['sockets']*server_info['max_cores_per_socket']
@@ -176,17 +119,12 @@ def select_optimal_server_configuration(model, num_cores, memory_per_core, priva
         raise NoServerConfigurationFound(('No valid server configuration found for specified memory per core value : %d')%(memory_per_core))
     return min_cost_dict;
 
-def determine_usable_storage(model, raw_storage_size):
-    storage_params = model['storage'];
-    usable_storage = (float(100-storage_params['os_penalty_percentage'])/100)*raw_storage_size;
-    usable_storage = (float(100-storage_params['raid_penalty_percentage'])/100)*usable_storage;
-    return usable_storage;
-
-def compute_storage_cost(model, raw_storage_size, private_cloud_hosting, operating_period_in_years, fix_amazon_calculations):
+def compute_storage_cost(model, raw_storage_size, private_cloud_hosting, operating_period_in_years,
+        storage_type, fix_amazon_calculations):
     cost_dict = OrderedDict()
     cost_dict['usable_storage'] = determine_usable_storage(model, raw_storage_size);
     storage_params = model['storage'];
-    cost_per_TB = (float(100-storage_params['discount_percentage'])/100)*storage_params['cost_per_TB'];
+    cost_per_TB = (float(100-storage_params['discount_percentage'])/100)*storage_params['cost_per_TB'][storage_type];
     cost_dict['storage_purchase_cost'] = raw_storage_size*cost_per_TB;
     backup_data_size = (float(storage_params['backup_percentage'])/100)*(cost_dict['usable_storage'] if fix_amazon_calculations else raw_storage_size);
     cost_dict['num_backup_devices_needed'] = int(math.ceil(float(backup_data_size*1024*1024)/  \
@@ -228,21 +166,31 @@ def compute_network_cost(model, bandwidth, bandwidth_utilization, private_cloud_
     cost_dict['summary']['total_cost'] = cost_dict['summary']['hardware_cost'] + cost_dict['summary']['bandwidth_cost'];
     return cost_dict;
 
-def compute_tco(args_handler):
+def compute_tco(args_handler, do_print=False):
     model = args_handler.m_model;
     cost_dict = OrderedDict();
     cost_dict['compute'] = select_optimal_server_configuration(model, args_handler.m_num_cores, args_handler.m_memory_per_core,
             args_handler.m_private_cloud_hosting, args_handler.m_operating_period_in_years);
     cost_dict['storage'] = compute_storage_cost(model, args_handler.m_storage, args_handler.m_private_cloud_hosting,
-            args_handler.m_operating_period_in_years, False);
+            args_handler.m_operating_period_in_years, args_handler.m_storage_type, False);
     cost_dict['network'] = compute_network_cost(model, args_handler.m_bandwidth, args_handler.m_bandwidth_utilization,
             args_handler.m_private_cloud_hosting, args_handler.m_operating_period_in_years, cost_dict['compute']['summary']['hardware_cost']);
-    print(json.dumps(cost_dict, indent=4, separators=(',', ': ')));
+    total_cost = cost_dict['compute']['summary']['total_cost']+cost_dict['storage']['summary']['total_cost'] \
+            + cost_dict['network']['summary']['total_cost'];
+    cost_dict['summary'] = OrderedDict([
+        ('compute', cost_dict['compute']['summary']['total_cost']),
+        ('storage', cost_dict['storage']['summary']['total_cost']),
+        ('network', cost_dict['network']['summary']['total_cost']),
+        ('total_cost', total_cost),
+        ]);
+    if(do_print):
+        print(json.dumps(cost_dict, indent=4, separators=(',', ': ')));
+    return cost_dict;
 
 def main():
     parser = argparse.ArgumentParser(description='Cost model for private cloud based on Amazon\'s TCO calculator');
     args_handler = ArgumentsHandler(parser);
-    compute_tco(args_handler);
+    compute_tco(args_handler, do_print=True);
 
 if __name__ == "__main__":
     main()

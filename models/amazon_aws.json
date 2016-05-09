@@ -1,0 +1,84 @@
+{
+    "compute": {
+        "core_to_vcpu_factor": 2,
+        "location": "US West (Oregon)",
+        "operating_system": "Linux",
+        "instances" : [ "c4.8xlarge" ],
+        "instances_blah": [
+            "c4.large",
+            "c4.xlarge",
+            "c4.2xlarge",
+            "c4.4xlarge",
+            "c4.8xlarge",
+            "c3.large",
+            "c3.xlarge",
+            "c3.2xlarge",
+            "c3.4xlarge",
+            "c3.8xlarge",
+            "r3.large",
+            "r3.xlarge",
+            "r3.2xlarge",
+            "r3.4xlarge",
+            "r3.8xlarge"
+        ],
+        "offer_term_parameters" : {
+            "upfront_portion_code": { "code": "2TG2D8R56U" },
+            "hourly_payment_code": { "code": "6YS6EN2CT7" },
+            "3year_all_upfront": { "code": "NQ3QZPMQV9", "duration": 3 },
+            "3year_partial_upfront": { "code": "38NPMPTW36", "duration": 3 },
+            "1year_all_upfront": { "code": "6QCMYABX3D", "duration": 1 },
+            "1year_partial_upfront": { "code": "HU7G6KETJZ", "duration": 1 },
+            "1year_no_upfront": { "code": "4NA7Y494T4", "duration": 1 },
+            "OnDemand": { "code": "JRTCKXETXF" }
+        },
+        "tenancies": [ "Shared" ],
+        "offer_terms": [ "3year_all_upfront", "3year_partial_upfront", "1year_no_upfront", "1year_partial_upfront", "1year_all_upfront", "OnDemand" ],
+        "reserved_discount_tiers": [
+            { "segment_limit": 500000, "rate": 0 },
+            { "segment_limit": 4000000, "rate": 0.05 },
+            { "segment_limit": 1000000000000, "rate": 0.1 }
+        ]
+    },
+    "storage": {
+        "os_penalty_percentage": 7,
+        "raid_penalty_percentage": 50,
+        "snapshot_cost_per_TB": 97.28,
+        "backup_percentage": 5,
+        "ebs": {
+            "pricing_tiers": [
+                { "name": "io1", "max_iops_per_volume": 20000, "max_bandwidth_per_volume": 320, "baseline_iops_per_GB": 30,
+                    "price_per_GB_per_month": 0.125, "price_per_iops_per_month": 0.065 },
+                { "name": "gp2", "max_iops_per_volume": 10000, "max_bandwidth_per_volume": 160, "baseline_iops_per_GB": 3,
+                    "price_per_GB_per_month": 0.1},
+                { "name": "st1", "max_iops_per_volume": 500, "max_bandwidth_per_volume": 500, "baseline_bandwidth_per_TB": 40,
+                    "price_per_GB_per_month": 0.045 },
+                { "name": "sc1", "max_iops_per_volume": 250, "max_bandwidth_per_volume": 250, "baseline_bandwidth_per_TB": 12,
+                    "price_per_GB_per_month": 0.025 }
+            ]
+        }
+    },
+    "network": {
+        "percentage_outbound_traffic": 10,
+        "pricing_tiers": [
+            { "segment_limit_GB": 0.0, "cost_per_GB": 0 },
+            { "segment_limit_GB": 10240, "cost_per_GB": 0.09 },
+            { "segment_limit_GB": 51200, "cost_per_GB": 0.085 },
+            { "segment_limit_GB": 153600, "cost_per_GB": 0.07 },
+            { "segment_limit_GB": 1000000000000, "cost_per_GB": 0.05 }
+        ]
+    },
+    "support": {
+        "business": [
+            { "segment_limit": 10000, "rate": 0.1 },
+            { "segment_limit": 80000, "rate": 0.07 },
+            { "segment_limit": 250000, "rate": 0.05 },
+            { "segment_limit": 1000000000000, "rate": 0.03 }
+        ],
+        "enterprise": [
+            { "segment_limit": 150000, "rate": 0.1 },
+            { "segment_limit": 500000, "rate": 0.07 },
+            { "segment_limit": 1000000, "rate": 0.05 },
+            { "segment_limit": 1000000000000, "rate": 0.03 }
+        ]
+    }
+}

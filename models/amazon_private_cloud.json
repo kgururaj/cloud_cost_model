@@ -40,7 +40,7 @@
     "storage": {
         "os_penalty_percentage": 7,
         "raid_penalty_percentage": 50,
-        "cost_per_TB": 6144,
+        "cost_per_TB":  { "SAN": 8192, "NAS": 6144 },
         "discount_percentage": 50,
         "backup_percentage": 100,
         "backup_speed_per_device_in_MBps": 140,
