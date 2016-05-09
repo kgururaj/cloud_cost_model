@@ -168,10 +168,14 @@ def compute_storage_cost(model, raw_storage_size, private_cloud_hosting, operati
     storage_params = model['storage'];
     cost_per_TB = (float(100-storage_params['discount_percentage'])/100)*storage_params['cost_per_TB'][storage_type];
     cost_dict['storage_purchase_cost'] = raw_storage_size*cost_per_TB;
-    backup_data_size = (float(100+backup_percentage_per_month)/100)*raw_storage_size;
-    cost_dict['backup_data_size'] = backup_data_size;
-    cost_dict['num_backup_devices_needed'] = int(math.ceil(float(backup_data_size*1024*1024)/  \
-            (storage_params['backup_speed_per_device_in_MBps']*storage_params['backup_time_window_in_hours']*3600)));
+    num_backup_devices_to_store_all_data = int(math.ceil(float(cost_dict['usable_storage'])/storage_params['backup_capacity_per_device_in_TB']));
+    incremental_backup_data_size = (float(backup_percentage_per_month)/100)*cost_dict['usable_storage'];
+    cost_dict['incremental_backup_data_size'] = incremental_backup_data_size;
+    num_backup_devices_for_incremental_backup = int(math.ceil(float(incremental_backup_data_size*1024*1024)/  \
+            (storage_params['backup_speed_per_device_in_MBps']*storage_params['backup_time_window_in_hours']*3600)))
+    cost_dict['num_backup_devices_to_store_all_data'] = num_backup_devices_to_store_all_data;
+    cost_dict['num_backup_devices_for_incremental_backup'] = num_backup_devices_for_incremental_backup;
+    cost_dict['num_backup_devices_needed'] = max(num_backup_devices_to_store_all_data, num_backup_devices_for_incremental_backup);
     cost_dict['backup_storage_cost'] = cost_dict['num_backup_devices_needed']*storage_params['backup_device_cost'];
     cost_dict['num_racks'] = determine_num_racks(model, raw_storage_size, storage_params['rack_storage_capacity']);
     cost_dict['rack_operational_cost'] = cost_dict['num_racks']*storage_params['rack_monthly_operational_cost']*12*operating_period_in_years;
