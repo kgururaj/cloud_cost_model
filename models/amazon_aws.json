@@ -41,8 +41,7 @@
     "storage": {
         "os_penalty_percentage": 7,
         "raid_penalty_percentage": 50,
-        "snapshot_cost_per_TB": 97.28,
-        "backup_percentage": 5,
+        "snapshot_cost_per_TB_per_month": 97.28,
         "ebs": {
             "pricing_tiers": [
                 { "name": "io1", "max_iops_per_volume": 20000, "max_bandwidth_per_volume": 320, "baseline_iops_per_GB": 30,

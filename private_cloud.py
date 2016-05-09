@@ -119,15 +119,15 @@ def select_optimal_server_configuration(model, num_cores, memory_per_core, priva
         raise NoServerConfigurationFound(('No valid server configuration found for specified memory per core value : %d')%(memory_per_core))
     return min_cost_dict;
 
-def compute_storage_cost(model, raw_storage_size, private_cloud_hosting, operating_period_in_years,
-        storage_type, fix_amazon_calculations):
+def compute_storage_cost(model, raw_storage_size, private_cloud_hosting, operating_period_in_years, storage_type, backup_percentage_per_month):
     cost_dict = OrderedDict()
     cost_dict['raw_storage_size'] = raw_storage_size;
     cost_dict['usable_storage'] = determine_usable_storage(model, raw_storage_size);
     storage_params = model['storage'];
     cost_per_TB = (float(100-storage_params['discount_percentage'])/100)*storage_params['cost_per_TB'][storage_type];
     cost_dict['storage_purchase_cost'] = raw_storage_size*cost_per_TB;
-    backup_data_size = (float(storage_params['backup_percentage'])/100)*(cost_dict['usable_storage'] if fix_amazon_calculations else raw_storage_size);
+    backup_data_size = (float(100+backup_percentage_per_month)/100)*raw_storage_size;
+    cost_dict['backup_data_size'] = backup_data_size;
     cost_dict['num_backup_devices_needed'] = int(math.ceil(float(backup_data_size*1024*1024)/  \
             (storage_params['backup_speed_per_device_in_MBps']*storage_params['backup_time_window_in_hours']*3600)));
     cost_dict['backup_storage_cost'] = cost_dict['num_backup_devices_needed']*storage_params['backup_device_cost'];
@@ -184,7 +184,7 @@ def compute_tco(args_handler, do_print=False):
     cost_dict['compute'] = select_optimal_server_configuration(model, args_handler.m_num_cores, args_handler.m_memory_per_core,
             args_handler.m_private_cloud_hosting, args_handler.m_operating_period_in_years);
     cost_dict['storage'] = compute_storage_cost(model, args_handler.m_storage, args_handler.m_private_cloud_hosting,
-            args_handler.m_operating_period_in_years, args_handler.m_storage_type, False);
+            args_handler.m_operating_period_in_years, args_handler.m_storage_type, args_handler.m_backup_percentage_per_month);
     cost_dict['network'] = compute_network_cost(model, args_handler.m_bandwidth, args_handler.m_bandwidth_utilization,
             args_handler.m_private_cloud_hosting, args_handler.m_operating_period_in_years, cost_dict['compute']['summary']['hardware_cost']);
     cost_dict['IT'] = None;

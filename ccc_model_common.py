@@ -20,6 +20,7 @@ class ArgumentsHandler:
     m_storage = None;
     m_storage_type = 'NAS';
     m_storage_utilization = 100;
+    m_backup_percentage_per_month = 5;
     m_iops_per_GB_requested = None;
     m_storage_bandwidth_per_TB_requested = None;
     m_bandwidth = None;
@@ -32,6 +33,7 @@ class ArgumentsHandler:
         parser.add_argument('--core_utilization', help='Average utilization per core (as a percentage)', default=100, type=float);
         parser.add_argument('--operating_period', help='Operating period in years', default=3, type=int);
         parser.add_argument('--storage_type', help='Storage type - NAS(default) or SAN', default='NAS', choices=['SAN','NAS']);
+        parser.add_argument('--backup_percentage_per_month', help='Percentage of total data that changes per month', default=5, type=float);
         parser.add_argument('--include_IT_cost', help='Include IT cost (default: False)', action='store_true');
 
     def add_required_arguments(self, parser):
@@ -60,6 +62,7 @@ class ArgumentsHandler:
             self.m_private_cloud_hosting = arguments.private_cloud_hosting;
             self.m_operating_period_in_years = arguments.operating_period;
             self.m_storage_type = arguments.storage_type;
+            self.m_backup_percentage_per_month = arguments.backup_percentage_per_month;
             self.m_include_IT_cost = arguments.include_IT_cost;
         else:
             parse_model_params_file(model_parameters_file);

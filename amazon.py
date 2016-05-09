@@ -170,7 +170,7 @@ def select_optimal_server_configuration(model, ec2_pricing_model, num_cores, mem
     cost_dict['summary']['total_cost'] = min_cost_dict['total_cost'] - discount_value;
     return cost_dict;
     
-def compute_storage_cost(model, raw_storage_size, storage_utilization_percentage, operating_period_in_years,
+def compute_storage_cost(model, raw_storage_size, storage_utilization_percentage, operating_period_in_years, backup_percentage_per_month,
         iops_per_GB_requested=None, bandwidth_per_TB_requested=None):
     min_cost_dict = None;
     min_cost = 100000000000000;
@@ -197,7 +197,7 @@ def compute_storage_cost(model, raw_storage_size, storage_utilization_percentage
     if(not min_cost_dict):
         raise NoServerConfigurationFound('Could not find storage type with required specification');
     backup_onetime_cost = usable_storage*model['storage']['snapshot_cost_per_TB'];
-    backup_monthly_cost = (12*operating_period_in_years*float(usable_storage*model['storage']['backup_percentage'])/100)*model['storage']['snapshot_cost_per_TB'];
+    backup_monthly_cost = (12*operating_period_in_years*float(usable_storage*backup_percentage_per_month)/100)*model['storage']['snapshot_cost_per_TB_per_month'];
     min_cost_dict['backup_onetime_cost'] = backup_onetime_cost;
     min_cost_dict['backup_monthly_cost'] = backup_monthly_cost;
     min_cost_dict['summary'] = OrderedDict();
@@ -232,7 +232,7 @@ def compute_tco(args_handler, do_print=False):
     cost_dict['compute'] = select_optimal_server_configuration(model, ec2_pricing_model, args_handler.m_num_cores, args_handler.m_memory_per_core,
             args_handler.m_operating_period_in_years, args_handler.m_core_utilization);
     cost_dict['storage'] = compute_storage_cost(model, args_handler.m_storage, args_handler.m_storage_utilization,
-            args_handler.m_operating_period_in_years,
+            args_handler.m_operating_period_in_years, args_handler.m_backup_percentage_per_month,
             args_handler.m_iops_per_GB_requested, args_handler.m_storage_bandwidth_per_TB_requested);
     cost_dict['network'] = compute_network_cost(model, args_handler.m_bandwidth, args_handler.m_bandwidth_utilization,
             args_handler.m_operating_period_in_years);

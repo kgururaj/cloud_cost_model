@@ -42,7 +42,6 @@
         "raid_penalty_percentage": 50,
         "cost_per_TB":  { "SAN": 8192, "NAS": 6144 },
         "discount_percentage": 50,
-        "backup_percentage": 100,
         "backup_speed_per_device_in_MBps": 140,
         "backup_time_window_in_hours": 8,
         "backup_device_cost": 1800,
