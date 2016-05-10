@@ -72,6 +72,5 @@
         "storage_per_admin": 1024,
         "network_admin_percentage": 8
     },
-    "cost_per_kWh": 0.12,
-    "operating_period_in_years": 3
+    "cost_per_kWh": 0.12
 }
