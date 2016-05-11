@@ -47,8 +47,11 @@ def determine_server_purchase_cost(model, server_info, memory_per_core, num_usab
     if(num_usable_cores < 1):
         raise NoServerConfigurationFound(('No valid server configuration found for specified memory per core value : %d')%(memory_per_core))
     memory_needed = num_usable_cores*memory_per_core;
-    server_cost_with_baseline_memory = server_info['per_core']*num_usable_cores + server_info['base_cost'];
-    server_cost = server_info['per_GB']*memory_needed + (server_cost_with_baseline_memory - server_info['per_GB']*server_info['base_memory']);
+    if('base_cost' in server_info and 'per_GB' in server_info and 'per_core' in server_info and 'base_memory' in server_info):
+        server_cost_with_baseline_memory = server_info['per_core']*num_usable_cores + server_info['base_cost'];
+        server_cost = server_info['per_GB']*memory_needed + (server_cost_with_baseline_memory - server_info['per_GB']*server_info['base_memory']);
+    else:
+        server_cost = server_info['cost'];
     #discount
     server_cost = (float(100-model['compute']['server_discount_percentage'])/100)*server_cost;
     return server_cost;
