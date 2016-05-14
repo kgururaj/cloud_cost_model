@@ -67,6 +67,7 @@ def main():
         aws_cost_dict_list.append(cost_dict);
         config_idx += 1;
     ccc_model_common.print_cost_summary_csv(pvt_cost_dict_list);
+    print('');
     ccc_model_common.print_cost_summary_csv(aws_cost_dict_list);
 if __name__ == "__main__":
     main()
