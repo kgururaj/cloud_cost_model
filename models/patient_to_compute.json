@@ -1,0 +1,10 @@
+{
+    "configurations" : [
+        {
+            "num_patients_per_year": 1000,
+            "num_samples_per_patient_per_year": 2,
+            "num_samples_processed_per_core_per_day": 0.0208,
+            "storage_per_sample": 1
+        }
+    ]
+}

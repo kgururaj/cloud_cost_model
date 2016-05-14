@@ -19,19 +19,18 @@ class PrivateCloudArgumentsHandler(ArgumentsHandler):
                 default='colocation', choices=['colocation', 'on_premise']);
         parser.add_argument('--storage_type', help='Storage type - NAS(default) or SAN', default='NAS', choices=['SAN','NAS']);
 
-    def __init__(self, argparse_obj=None, model_parameters_file=None, num_cores=None, memory_per_core=None, storage=None, storage_type=None,
-            bandwidth=None, bandwidth_utilization=None, private_cloud_hosting=None, operating_period_in_years=None):
+    def __init__(self, argparse_obj=None, model_parameters_file=None, model_parameters_dict=None,
+            num_cores=None, memory_per_core=None, storage=None, bandwidth=None, bandwidth_utilization=None,
+            **kwargs):
         if(argparse_obj):
             self.add_private_cloud_optional_arguments(argparse_obj);
-        ArgumentsHandler.__init__(self, argparse_obj, model_parameters_file, num_cores, memory_per_core, storage,
-                bandwidth, bandwidth_utilization, operating_period_in_years);
+        ArgumentsHandler.__init__(self, argparse_obj, model_parameters_file=model_parameters_file, model_parameters_dict=model_parameters_dict,
+                num_cores=num_cores, memory_per_core=memory_per_core,
+                storage=storage, bandwidth=bandwidth, bandwidth_utilization=bandwidth_utilization, **kwargs);
         if(argparse_obj):
             arguments = argparse_obj.parse_args();
             self.m_private_cloud_hosting = arguments.private_cloud_hosting;
             self.m_storage_type = arguments.storage_type;
-        else:
-            self.m_private_cloud_hosting = private_cloud_hosting;
-            self.m_storage_type = storage_type;
 
 def determine_num_usable_cores_in_server_type(server_info, memory_per_core):
     max_cores_in_server = server_info['sockets']*server_info['max_cores_per_socket']

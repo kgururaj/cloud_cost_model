@@ -9,6 +9,7 @@ from ccc_model_common import ArgumentsHandler
 from ccc_model_common import NoServerConfigurationFound
 from ccc_model_common import piecewise_linear_function
 from ccc_model_common import determine_usable_storage
+from ccc_model_common import parse_model_params_file
 
 class AmazonArgumentsHandler(ArgumentsHandler):
 
@@ -20,23 +21,28 @@ class AmazonArgumentsHandler(ArgumentsHandler):
         required_named_args_group.add_argument('--ec2_pricing_json_file', help='Path to AWS EC2 pricing JSON file', required=True);
 
     def add_amazon_optional_arguments(self, parser):
-        parser.add_argument('--include_aws_support', choices=['business', 'enterprise'], default=None);
+        parser.add_argument('--aws_support', choices=['business', 'enterprise'], default=None);
 
-    def __init__(self, argparse_obj=None, model_parameters_file=None, ec2_pricing_json_file=None, num_cores=None, memory_per_core=None, storage=None,
-            bandwidth=None, bandwidth_utilization=None, operating_period_in_years=None):
+    def __init__(self, argparse_obj=None, model_parameters_file=None, model_parameters_dict=None,
+            ec2_pricing_json_file=None, ec2_pricing_dict=None, num_cores=None, memory_per_core=None, storage=None,
+            bandwidth=None, bandwidth_utilization=None, **kwargs):
         
         if(argparse_obj):
             self.add_amazon_required_arguments(argparse_obj);
             self.add_amazon_optional_arguments(argparse_obj);
-        ArgumentsHandler.__init__(self, argparse_obj, model_parameters_file, num_cores, memory_per_core, storage,
-                bandwidth, bandwidth_utilization, operating_period_in_years);
+        ArgumentsHandler.__init__(self, argparse_obj, model_parameters_file=model_parameters_file,
+                model_parameters_dict=model_parameters_dict, num_cores=num_cores, memory_per_core=memory_per_core,
+                storage=storage, bandwidth=bandwidth, bandwidth_utilization=bandwidth_utilization, **kwargs);
         if(argparse_obj):
             arguments = argparse_obj.parse_args();
             ec2_pricing_json_file = arguments.ec2_pricing_json_file;
-            self.m_aws_support = arguments.include_aws_support;
-        fptr = open(ec2_pricing_json_file, 'rb');
-        self.m_ec2_pricing_model = json.load(fptr);
-        fptr.close();
+            self.m_ec2_pricing_model = parse_model_params_file(ec2_pricing_json_file);
+            self.m_aws_support = arguments.aws_support;
+        else:
+            if(ec2_pricing_dict):
+                self.m_ec2_pricing_model = ec2_pricing_dict;
+            else:
+                self.m_ec2_pricing_model = parse_model_params_file(ec2_pricing_json_file);
         product_types = set();
         for product_key,product_info in self.m_ec2_pricing_model['products'].iteritems():
             if('productFamily' in product_info):
