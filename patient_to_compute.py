@@ -71,7 +71,7 @@ def main():
         config_idx += 1;
     complete_dict = OrderedDict();
     complete_dict['private_cloud'] = pvt_cost_dict_list;
-    complete_dict['AWS'] = pvt_cost_dict_list;
+    complete_dict['AWS'] = aws_cost_dict_list;
     print(json.dumps(complete_dict, indent=4, separators=(',', ': ')));
     sys.stdout.write('Private cloud');
     ccc_model_common.print_cost_summary_csv(pvt_cost_dict_list);
