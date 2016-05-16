@@ -57,8 +57,8 @@ def main():
                 bandwidth_utilization=arguments.bandwidth_utilization, include_IT_cost=arguments.include_IT_cost,
                 operating_period_in_years=arguments.operating_period);
         cost_dict = private_cloud.compute_tco(pvt_config, do_print=True);
-        modify_cost_dict(cost_dict, config_name, config, OrderedDict([('num_cores', num_cores), ('raw_storage', storage),
-            ('usable_storage', usable_storage)]));
+        modify_cost_dict(cost_dict, config_name, config, OrderedDict([('num_cores', num_cores), ('raw_storage_in_TB', storage),
+            ('usable_storage_in_TB', usable_storage)]));
         pvt_cost_dict_list.append(cost_dict);
         aws_config = amazon.AmazonArgumentsHandler(model_parameters_dict=aws_model, ec2_pricing_dict=ec2_pricing_dict,
                 num_cores=num_cores, memory_per_core=arguments.memory_per_core, storage=storage, bandwidth=arguments.bandwidth,
