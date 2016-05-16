@@ -11,11 +11,11 @@ from collections import OrderedDict
 def determine_cores_and_storage(patients_stats_dict, operating_period_in_years=3):
     num_samples_per_year = patients_stats_dict['num_patients_per_year']*patients_stats_dict['num_samples_per_patient_per_year'];
     total_num_samples = num_samples_per_year*operating_period_in_years;
-    total_storage = total_num_samples*patients_stats_dict['storage_per_sample'];
+    total_usable_storage = total_num_samples*patients_stats_dict['storage_per_sample'];
+    total_raw_storage = ccc_model_common.determine_raw_storage(total_usable_storage);
     num_samples_per_day = float(num_samples_per_year)/365;
     num_cores = int(math.ceil(num_samples_per_day/patients_stats_dict['num_samples_processed_per_core_per_day']));
-    return (num_cores, total_storage);
-
+    return (num_cores, total_raw_storage, total_usable_storage);
 
 def modify_cost_dict(cost_dict, name, config_dict, params):
         summary_dict = OrderedDict();
@@ -51,19 +51,21 @@ def main():
     config_idx = 0;
     for config in patients_dict['configurations']:
         config_name = config['name'] if ('name' in config) else str(config_idx);
-        num_cores, storage = determine_cores_and_storage(config, arguments.operating_period); 
+        num_cores, storage, usable_storage = determine_cores_and_storage(config, arguments.operating_period);
         pvt_config = private_cloud.PrivateCloudArgumentsHandler(model_parameters_dict=pvt_cloud_model, num_cores=num_cores,
                 memory_per_core=arguments.memory_per_core, storage=storage, bandwidth=arguments.bandwidth,
                 bandwidth_utilization=arguments.bandwidth_utilization, include_IT_cost=arguments.include_IT_cost,
                 operating_period_in_years=arguments.operating_period);
         cost_dict = private_cloud.compute_tco(pvt_config, do_print=True);
-        modify_cost_dict(cost_dict, config_name, config, OrderedDict([('num_cores', num_cores), ('raw_storage', storage)]));
+        modify_cost_dict(cost_dict, config_name, config, OrderedDict([('num_cores', num_cores), ('raw_storage', storage),
+            ('usable_storage', usable_storage)]));
         pvt_cost_dict_list.append(cost_dict);
         aws_config = amazon.AmazonArgumentsHandler(model_parameters_dict=aws_model, ec2_pricing_dict=ec2_pricing_dict,
                 num_cores=num_cores, memory_per_core=arguments.memory_per_core, storage=storage, bandwidth=arguments.bandwidth,
                 bandwidth_utilization=arguments.bandwidth_utilization, aws_support=arguments.aws_support);
         cost_dict = amazon.compute_tco(aws_config, do_print=False);
-        modify_cost_dict(cost_dict, config_name, config, OrderedDict([('num_cores', num_cores), ('raw_storage', storage)]));
+        modify_cost_dict(cost_dict, config_name, config, OrderedDict([('num_cores', num_cores), ('raw_storage_in_TB', storage),
+            ('usable_storage_in_TB', usable_storage) ]));
         aws_cost_dict_list.append(cost_dict);
         config_idx += 1;
     sys.stdout.write('Private cloud');

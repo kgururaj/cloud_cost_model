@@ -86,6 +86,13 @@ def determine_usable_storage(model, raw_storage_size):
     usable_storage = (float(100-storage_params['raid_penalty_percentage'])/100)*usable_storage;
     return usable_storage;
 
+def determine_raw_storage(model, usable_storage_size):
+    storage_params = model['storage'];
+    after_os_penalty_fraction = (float(100-storage_params['os_penalty_percentage'])/100);
+    after_raid_penalty_fraction = (float(100-storage_params['raid_penalty_percentage'])/100);
+    raw_storage_size = float(usable_storage_size)/(after_os_penalty_fraction*after_raid_penalty_fraction);
+    return raw_storage_size;
+
 def piecewise_linear_function(model, segment_key, cost_key, value):
     remaining = value;
     last_limit_value = 0;
