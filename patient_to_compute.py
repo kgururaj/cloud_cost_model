@@ -12,10 +12,9 @@ def determine_cores_and_storage(patients_stats_dict, operating_period_in_years=3
     num_samples_per_year = patients_stats_dict['num_patients_per_year']*patients_stats_dict['num_samples_per_patient_per_year'];
     total_num_samples = num_samples_per_year*operating_period_in_years;
     total_usable_storage = total_num_samples*patients_stats_dict['storage_per_sample'];
-    total_raw_storage = ccc_model_common.determine_raw_storage(total_usable_storage);
     num_samples_per_day = float(num_samples_per_year)/365;
     num_cores = int(math.ceil(num_samples_per_day/patients_stats_dict['num_samples_processed_per_core_per_day']));
-    return (num_cores, total_raw_storage, total_usable_storage);
+    return (num_cores, total_usable_storage);
 
 def modify_cost_dict(cost_dict, name, config_dict, params):
         summary_dict = OrderedDict();
@@ -51,7 +50,8 @@ def main():
     config_idx = 0;
     for config in patients_dict['configurations']:
         config_name = config['name'] if ('name' in config) else str(config_idx);
-        num_cores, storage, usable_storage = determine_cores_and_storage(config, arguments.operating_period);
+        num_cores, usable_storage = determine_cores_and_storage(config, arguments.operating_period);
+        storage = ccc_model_common.determine_raw_storage(pvt_cloud_model, usable_storage);
         pvt_config = private_cloud.PrivateCloudArgumentsHandler(model_parameters_dict=pvt_cloud_model, num_cores=num_cores,
                 memory_per_core=arguments.memory_per_core, storage=storage, bandwidth=arguments.bandwidth,
                 bandwidth_utilization=arguments.bandwidth_utilization, include_IT_cost=arguments.include_IT_cost,
