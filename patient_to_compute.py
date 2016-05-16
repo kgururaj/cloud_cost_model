@@ -56,7 +56,7 @@ def main():
                 memory_per_core=arguments.memory_per_core, storage=storage, bandwidth=arguments.bandwidth,
                 bandwidth_utilization=arguments.bandwidth_utilization, include_IT_cost=arguments.include_IT_cost,
                 operating_period_in_years=arguments.operating_period);
-        cost_dict = private_cloud.compute_tco(pvt_config, do_print=True);
+        cost_dict = private_cloud.compute_tco(pvt_config, do_print=False);
         modify_cost_dict(cost_dict, config_name, config, OrderedDict([('num_cores', num_cores), ('raw_storage_in_TB', storage),
             ('usable_storage_in_TB', usable_storage)]));
         pvt_cost_dict_list.append(cost_dict);
@@ -68,6 +68,10 @@ def main():
             ('usable_storage_in_TB', usable_storage) ]));
         aws_cost_dict_list.append(cost_dict);
         config_idx += 1;
+    complete_dict = OrderedDict();
+    complete_dict['private_cloud'] = pvt_cost_dict_list;
+    complete_dict['AWS'] = pvt_cost_dict_list;
+    print(json.dumps(complete_dict, indent=4, separators=(',', ': ')));
     sys.stdout.write('Private cloud');
     ccc_model_common.print_cost_summary_csv(pvt_cost_dict_list);
     sys.stdout.write('\nAWS');
