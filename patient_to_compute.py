@@ -66,8 +66,9 @@ def main():
         modify_cost_dict(cost_dict, config_name, config, OrderedDict([('num_cores', num_cores), ('raw_storage', storage)]));
         aws_cost_dict_list.append(cost_dict);
         config_idx += 1;
+    sys.stdout.write('Private cloud');
     ccc_model_common.print_cost_summary_csv(pvt_cost_dict_list);
-    print('');
+    sys.stdout.write('\nAWS');
     ccc_model_common.print_cost_summary_csv(aws_cost_dict_list);
 if __name__ == "__main__":
     main()
