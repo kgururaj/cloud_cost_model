@@ -6,6 +6,7 @@ import ccc_model_common;
 import argparse;
 import sys;
 import math;
+import json;
 from collections import OrderedDict
 
 def determine_cores_and_storage(patients_stats_dict, operating_period_in_years=3):
